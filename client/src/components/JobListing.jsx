@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { AppContext } from "../context/AppContext";
-import { assets } from "../assets/assets";
+import { assets, JobCategories } from "../assets/assets";
 
 const JobListing = () => {
   const { isSearched, searchFilter, setSearchFilter } = useContext(AppContext);
@@ -29,7 +29,7 @@ const JobListing = () => {
                   </span>
                 )}
                 {searchFilter.location && (
-                  <span className="inline-flex items-center gap-2.5 bg-red-50 border border-red-200 px-4 py-1.5 rounded">
+                  <span className="ml-2 inline-flex items-center gap-2.5 bg-red-50 border border-red-200 px-4 py-1.5 rounded">
                     {searchFilter.location}
                     <img
                       onClick={(e) =>
@@ -44,6 +44,18 @@ const JobListing = () => {
               </div>
             </>
           )}
+        {/* Category Filter */}
+        <div className="max-lg:hidden">
+          <h4 className="font-medium text-lg py-4">Search By Category</h4>
+          <ul className="space-y-4 text-gray-600">
+            {JobCategories.map((category, index) => (
+              <li className="flex gap-3 items-center" key={index}>
+                <input className="scale-125" type="checkbox" id="" name="" />
+                {category}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
