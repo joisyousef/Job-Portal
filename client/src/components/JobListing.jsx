@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { assets, JobCategories, JobLocations } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
 import JobCard from "./JobCard";
@@ -7,6 +7,7 @@ const JobListing = () => {
   const { isSearched, searchFilter, setSearchFilter, jobs } =
     useContext(AppContext);
 
+  const [showFilter, setShowFilter] = useState(true);
   return (
     <div className="container 2xl:px-20 mx-auto flex flex-col lg:flex-row space-y-8 lg:space-y-0 py-8">
       {/* Sidebar */}
@@ -44,9 +45,14 @@ const JobListing = () => {
             </div>
           </>
         )}
-
+        <button
+          onClick={(e) => setShowFilter((prev) => !prev)}
+          className="px-6 py-1.5 rounded border border-gray-400  lg:hidden"
+        >
+          {showFilter ? "Close" : "Filters"}
+        </button>
         {/* Category Filter */}
-        <div className="hidden lg:block">
+        <div className={showFilter ? "" : "max-lg:hidden"}>
           <h4 className="font-medium text-lg py-4">Search By Category</h4>
           <ul className="space-y-4 text-gray-600">
             {JobCategories.map((cat, i) => (
@@ -59,7 +65,7 @@ const JobListing = () => {
         </div>
 
         {/* Location Filter (same pattern as above) */}
-        <div className="hidden lg:block">
+        <div className={showFilter ? "" : "max-lg:hidden"}>
           <h4 className="font-medium text-lg py-4">Search By Location</h4>
           <ul className="space-y-4 text-gray-600">
             {JobLocations.map((loc, i) => (
