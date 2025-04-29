@@ -1,10 +1,11 @@
 import React from "react";
+import Navbar from "../components/Navbar";
 
 const Applications = () => {
   return (
-    <div>
-      <h1>Applications Page</h1>
-    </div>
+    <>
+      <Navbar />
+    </>
   );
 };
 
