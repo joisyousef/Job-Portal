@@ -114,13 +114,13 @@ const Hero = () => {
             { src: assets.microsoft_logo, alt: "Microsoft" },
             { src: assets.walmart_logo, alt: "Walmart" },
             { src: assets.accenture_logo, alt: "Accenture" },
-            { src: assets.samsong_logo, alt: "Samsung" },
+            // { src: assets.samsong_logo, alt: "Samsung" },
             { src: assets.amazon_logo, alt: "Amazon" },
             { src: assets.adobe_logo, alt: "Adobe" },
           ].map((logo, index) => (
             <div
               key={index}
-              className="grayscale hover:grayscale-0 transition-all duration-300"
+              className=" hover:grayscale-0 transition-all duration-300"
             >
               <img
                 className="h-8 object-contain"
