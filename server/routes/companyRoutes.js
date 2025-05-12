@@ -7,7 +7,8 @@ import {
   getCompanyPostedJobs,
   loginCompany,
   registerCompany,
-} from "../controllers/companyController";
+  postJob,
+} from "../controllers/companyController.js";
 
 const router = express.Router();
 
