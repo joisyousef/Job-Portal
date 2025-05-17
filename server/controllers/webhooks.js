@@ -1,54 +1,50 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
 
-// API Controller Function to Manage Clerk User With Database
 export const clerkWebhook = async (req, res) => {
   try {
-    // Create a Svix instance with webhook secret
-    const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    // Verifying Headers
-    await webhook.verify(JSON.stringify(req.body), {
+    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+    await wh.verify(JSON.stringify(req.body), {
       "svix-id": req.headers["svix-id"],
       "svix-timestamp": req.headers["svix-timestamp"],
       "svix-signature": req.headers["svix-signature"],
     });
-    // Getting Data from request body
-    const { data, type } = req.body;
 
-    // Switch Cases for different events
+    const { data, type } = req.body;
+    const email = data.email_addresses?.[0]?.email_address ?? "";
+
     switch (type) {
-      case "user.created": {
-        const userData = {
+      case "user.created":
+        await User.create({
           _id: data.id,
-          email: data.email_address[0].email_add,
-          name: data.first_name + " " + data.last_name,
-          image: data.image_url,
+          email,
+          name: `${data.first_name} ${data.last_name}`,
+          Image: data.image_url,
           resume: "",
-        };
-        await User.create(userData);
-        res.json({});
-        break;
-      }
-      case "user.updated": {
-        const userData = {
-          email: data.email_address[0].email_add,
-          name: data.first_name + " " + data.last_name,
-          image: data.image_url,
-        };
-        await User.findByIdAndUpdate(data.id.userData);
-        res.json({});
-        break;
-      }
-      case "user.deleted": {
+        });
+        return res.json({ success: true });
+
+      case "user.updated":
+        await User.findByIdAndUpdate(
+          data.id,
+          {
+            email,
+            name: `${data.first_name} ${data.last_name}`,
+            Image: data.image_url,
+          },
+          { new: true, runValidators: true }
+        );
+        return res.json({ success: true });
+
+      case "user.deleted":
         await User.findByIdAndDelete(data.id);
-        res.json({});
-        break;
-      }
+        return res.json({ success: true });
+
       default:
-        break;
+        return res.status(400).json({ error: "Unhandled event type" });
     }
-  } catch (error) {
-    console.log(error.message);
-    res.json({ success: flase, message: "Webhooks Error" });
+  } catch (err) {
+    console.error("Clerk webhook error:", err);
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
