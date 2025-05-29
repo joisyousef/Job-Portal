@@ -5,6 +5,7 @@ import {
   getUserJobApplication,
   updateUserResume,
 } from "../controllers/userController.js";
+import upload from "../configs/multer.js";
 
 const router = express.Router();
 
@@ -19,3 +20,5 @@ router.get("/applications", getUserJobApplication);
 
 // Update User Profile (Resume)
 router.post("/update-resume", upload.single("resume"), updateUserResume);
+
+export default router;
