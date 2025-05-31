@@ -1,6 +1,7 @@
 import { React, useState, useEffect, useRef, useContext } from "react";
 import assets from "../assets/assets";
 import { AppContext } from "../context/AppContext";
+import axios from "axios";
 
 const RecruitersLogin = () => {
   const [state, setState] = useState("Login");
@@ -14,7 +15,7 @@ const RecruitersLogin = () => {
   const formRef = useRef(null);
 
   // Properly access the context
-  const { setShowRecruiterLogin } = useContext(AppContext);
+  const { setShowRecruiterLogin, backendUrl } = useContext(AppContext);
 
   // Initialize visibility on mount
   useEffect(() => {
@@ -111,6 +112,20 @@ const RecruitersLogin = () => {
           return;
         }
 
+        try {
+          if (state === "Login") {
+            const { data } = await axios.post(
+              backendUrl + "/api/company/login",
+              { email, password }
+            );
+            if (data.success) {
+              // Handle successful login, e.g., store token, redirect, etc.
+              console.log("Login successful:", data);
+              // closePopup();
+            }
+          }
+        } catch (error) {}
+
         // Example login API call:
         // const response = await fetch('/api/recruiters/login', {
         //   method: 'POST',
@@ -118,12 +133,12 @@ const RecruitersLogin = () => {
         //   body: JSON.stringify({ email, password })
         // });
 
-        console.log("Logging in with:", { email, password });
+        // console.log("Logging in with:", { email, password });
 
         // Handle login success
         // If login successful, you might want to redirect or update app state
         // Close the popup after successful login
-        closePopup();
+        // closePopup();
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
