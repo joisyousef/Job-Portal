@@ -34,7 +34,7 @@ const ViewApplication = () => {
                 <th className="px-6 py-4 text-left max-sm:hidden">Job Title</th>
                 <th className="px-6 py-4 text-left max-sm:hidden">Location</th>
                 <th className="px-6 py-4 text-left">Resume</th>
-                <th className="px-6 py-4 text-center">Action</th>
+                <th className="px-6 py-4 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -86,23 +86,45 @@ const ViewApplication = () => {
                     </a>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="relative inline-block text-left group">
-                      <button className="bg-gray-100 hover:bg-gray-200 h-8 w-8 rounded-full flex items-center justify-center font-bold text-gray-600 transition-colors">
-                        ⋮
-                      </button>
-                      <div className="z-10 hidden absolute right-0 md:right-0 top-full mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg group-hover:block py-1">
-                        <button className="flex w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
-                          <span className="mr-2">✓</span> Accept
+                    {applicant.status === "accepted" && (
+                      <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-medium">
+                        ✓ Accepted
+                      </span>
+                    )}
+                    {applicant.status === "rejected" && (
+                      <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-medium">
+                        ✕ Rejected
+                      </span>
+                    )}
+                    {applicant.status === "pending" && (
+                      <span className="bg-yellow-50 text-yellow-600 px-3 py-1 rounded-full text-xs font-medium">
+                        ⏳ Pending
+                      </span>
+                    )}
+                    {applicant.status === "under_review" && (
+                      <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-medium">
+                        👁 Under Review
+                      </span>
+                    )}
+                    {!applicant.status && (
+                      <div className="relative inline-block text-left group">
+                        <button className="bg-gray-100 hover:bg-gray-200 h-8 w-8 rounded-full flex items-center justify-center font-bold text-gray-600 transition-colors">
+                          ⋮
                         </button>
-                        <button className="flex w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                          <span className="mr-2">✕</span> Reject
-                        </button>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        <button className="flex w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                          <span className="mr-2">✉</span> Message
-                        </button>
+                        <div className="z-10 hidden absolute right-0 md:right-0 top-full mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg group-hover:block py-1">
+                          <button className="flex w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                            <span className="mr-2">✓</span> Accept
+                          </button>
+                          <button className="flex w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                            <span className="mr-2">✕</span> Reject
+                          </button>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <button className="flex w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                            <span className="mr-2">✉</span> Message
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </td>
                 </tr>
               ))}

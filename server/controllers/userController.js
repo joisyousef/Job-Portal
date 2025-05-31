@@ -1,4 +1,7 @@
-import { User } from "@clerk/express";
+import User from "../models/User.js";
+import Job from "../models/Job.js";
+import JobApplication from "../models/JobApplication.js";
+import { v2 as cloudinary } from "cloudinary";
 
 // Get User Data
 export const getUserData = async (req, res) => {
@@ -10,11 +13,11 @@ export const getUserData = async (req, res) => {
         success: false,
         message: "User not found",
       });
-      res.json({
-        success: true,
-        user,
-      });
     }
+    res.json({
+      success: true,
+      user,
+    });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -60,7 +63,53 @@ export const applyForJob = async (req, res) => {
 };
 
 // Get user's applied jobs
-export const getUserJobApplication = async (req, res) => {};
+export const getUserJobApplication = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const application = await JobApplication.find({
+      userId,
+    })
+      .populate("companyId", "name email image")
+      .populate("jobId", "title description location category level salary")
+      .exec();
+    if (!application) {
+      return res.json({
+        success: false,
+        message: "No applications found",
+      });
+    }
+    return res.json({
+      success: true,
+      application,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 // Update User Profile (Resume)
-export const updateUserResume = async (req, res) => {};
+export const updateUserResume = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const resumeFile = req.resumeFile;
+    const userData = await User.findById(userId);
+    if (resumeFile) {
+      const resumeUpload = await cloudinary.uploader.upload(resumeFile.path);
+      userData.resume = resumeUpload.secure_url;
+    }
+    await userData.save();
+    return res.json({
+      success: true,
+      message: "Resume updated successfully",
+      // user: userData,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
