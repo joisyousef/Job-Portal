@@ -2,8 +2,12 @@ import { React, useState, useEffect, useRef, useContext } from "react";
 import assets from "../assets/assets";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const RecruitersLogin = () => {
+  const navigate = useNavigate();
+
   const [state, setState] = useState("Login");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +19,8 @@ const RecruitersLogin = () => {
   const formRef = useRef(null);
 
   // Properly access the context
-  const { setShowRecruiterLogin, backendUrl } = useContext(AppContext);
+  const { setShowRecruiterLogin, backendUrl, setCompanyToken, setCompanyData } =
+    useContext(AppContext);
 
   // Initialize visibility on mount
   useEffect(() => {
@@ -121,7 +126,14 @@ const RecruitersLogin = () => {
             if (data.success) {
               // Handle successful login, e.g., store token, redirect, etc.
               console.log("Login successful:", data);
+              setCompanyToken(data.token);
+              setCompanyData(data.company);
+              localStorage.setItem("companyToken", data.token);
               // closePopup();
+              setShowRecruiterLogin(false);
+              navigate("/dashboard");
+            } else {
+              toast.error(data.message || "Login failed");
             }
           }
         } catch (error) {}
