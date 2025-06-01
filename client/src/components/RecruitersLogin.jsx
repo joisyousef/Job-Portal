@@ -125,7 +125,6 @@ const RecruitersLogin = () => {
             );
             if (data.success) {
               // Handle successful login, e.g., store token, redirect, etc.
-              console.log("Login successful:", data);
               setCompanyToken(data.token);
               setCompanyData(data.company);
               localStorage.setItem("companyToken", data.token);
@@ -134,6 +133,27 @@ const RecruitersLogin = () => {
               navigate("/dashboard");
             } else {
               toast.error(data.message || "Login failed");
+            }
+          } else {
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("email", email);
+            formData.append("password", password);
+            formData.append("image", image);
+            const { data } = await axios.post(
+              backendUrl + "/api/company/register",
+              formData
+            );
+            if (data.success) {
+              // Handle successful registration
+              setCompanyToken(data.token);
+              setCompanyData(data.company);
+              localStorage.setItem("companyToken", data.token);
+              // closePopup();
+              setShowRecruiterLogin(false);
+              navigate("/dashboard");
+            } else {
+              toast.error(data.message || "Registration failed");
             }
           }
         } catch (error) {}
