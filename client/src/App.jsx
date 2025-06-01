@@ -14,7 +14,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
-  const { showRecruiterLogin } = useContext(AppContext);
+  const { showRecruiterLogin, companyToken } = useContext(AppContext);
 
   return (
     <div>
@@ -29,14 +29,21 @@ const App = () => {
 
         {/* Dashboard with nested routes */}
         <Route path="/dashboard" element={<Dashboard />}>
-          {/* Redirect from /dashboard to /dashboard/add-job */}
-          <Route index element={<Navigate to="/dashboard/add-job" replace />} />
-
-          {/* Nested dashboard routes */}
-          <Route path="add-job" element={<AddJob />} />
-          <Route path="manage-jobs" element={<ManageJobs />} />
-          <Route path="view-applications" element={<ViewApplication />} />
-          <Route path="view-application/:id" element={<ViewApplication />} />
+          {companyToken ? (
+            <>
+              <Route
+                index
+                element={<Navigate to="/dashboard/add-job" replace />}
+              />
+              <Route path="add-job" element={<AddJob />} />
+              <Route path="manage-jobs" element={<ManageJobs />} />
+              <Route path="view-applications" element={<ViewApplication />} />
+              <Route
+                path="view-application/:id"
+                element={<ViewApplication />}
+              />
+            </>
+          ) : null}
         </Route>
 
         {/* Catch-all route - redirect to home */}
