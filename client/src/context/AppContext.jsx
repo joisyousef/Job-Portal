@@ -18,8 +18,9 @@ export const AppContextProvider = (props) => {
 
   const [showRecruiterLogin, setShowRecruiterLogin] = useState(false);
 
-  const [comapnyToken, setCompanyToken] = useState(null);
-  const [comapnyData, setCompanyData] = useState(null);
+  // Fixed variable names (removed typos)
+  const [companyToken, setCompanyToken] = useState(null);
+  const [companyData, setCompanyData] = useState(null);
 
   const fetchJobs = async () => {
     setJobs(jobsData);
@@ -28,16 +29,13 @@ export const AppContextProvider = (props) => {
   // Function to fetch company data
   const fetchCompanyData = async () => {
     try {
-      const { data } = await axios.get(
-        `${backendUrl}/api/company/getCompanyData`,
-        {
-          headers: {
-            Authorization: `Bearer ${comapnyToken}`,
-          },
-        }
-      );
+      const { data } = await axios.get(backendUrl + "/api/company/company", {
+        headers: {
+          token: companyToken, // Fixed variable name
+        },
+      });
       if (data.success) {
-        setCompanyData(data);
+        setCompanyData(data.company); // Make sure to set the company data properly
       } else {
         toast.error(data.message);
         console.log(data);
@@ -57,10 +55,11 @@ export const AppContextProvider = (props) => {
   }, []);
 
   useEffect(() => {
-    if (comapnyToken) {
+    if (companyToken) {
+      // Fixed variable name
       fetchCompanyData();
     }
-  }, [comapnyToken]);
+  }, [companyToken]); // Fixed variable name
 
   const value = {
     setSearchFilter,
@@ -71,12 +70,13 @@ export const AppContextProvider = (props) => {
     setJobs,
     showRecruiterLogin,
     setShowRecruiterLogin,
-    comapnyToken,
+    companyToken, // Fixed variable name
     setCompanyToken,
-    comapnyData,
+    companyData, // Fixed variable name
     setCompanyData,
     backendUrl,
   };
+
   return (
     <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
   );

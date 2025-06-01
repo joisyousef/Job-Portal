@@ -156,7 +156,9 @@ const RecruitersLogin = () => {
               toast.error(data.message || "Registration failed");
             }
           }
-        } catch (error) {}
+        } catch (error) {
+          console.error(error);
+        }
 
         // Example login API call:
         // const response = await fetch('/api/recruiters/login', {
