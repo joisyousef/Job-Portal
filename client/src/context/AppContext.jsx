@@ -22,6 +22,9 @@ export const AppContextProvider = (props) => {
   const [companyToken, setCompanyToken] = useState(null);
   const [companyData, setCompanyData] = useState(null);
 
+  // Add loading state to track when token is being loaded from localStorage
+  const [isTokenLoading, setIsTokenLoading] = useState(true);
+
   const fetchJobs = async () => {
     setJobs(jobsData);
   };
@@ -52,6 +55,8 @@ export const AppContextProvider = (props) => {
     if (storedToken) {
       setCompanyToken(storedToken);
     }
+    // Set loading to false after checking localStorage
+    setIsTokenLoading(false);
   }, []);
 
   useEffect(() => {
@@ -75,6 +80,7 @@ export const AppContextProvider = (props) => {
     companyData, // Fixed variable name
     setCompanyData,
     backendUrl,
+    isTokenLoading, // Add this to the context value
   };
 
   return (

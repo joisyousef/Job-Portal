@@ -14,7 +14,17 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
-  const { showRecruiterLogin, companyToken } = useContext(AppContext);
+  const { showRecruiterLogin, companyToken, isTokenLoading } =
+    useContext(AppContext);
+
+  // Show loading spinner or nothing while token is being loaded from localStorage
+  if (isTokenLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -28,23 +38,16 @@ const App = () => {
         <Route path="/applications" element={<Applications />} />
 
         {/* Dashboard with nested routes */}
-        <Route path="/dashboard" element={<Dashboard />}>
-          {companyToken ? (
-            <>
-              <Route
-                index
-                element={<Navigate to="/dashboard/add-job" replace />}
-              />
-              <Route path="add-job" element={<AddJob />} />
-              <Route path="manage-jobs" element={<ManageJobs />} />
-              <Route path="view-applications" element={<ViewApplication />} />
-              <Route
-                path="view-application/:id"
-                element={<ViewApplication />}
-              />
-            </>
-          ) : null}
-        </Route>
+        {companyToken ? (
+          <Route path="/dashboard" element={<Dashboard />}>
+            <Route path="add-job" element={<AddJob />} />
+            <Route path="manage-jobs" element={<ManageJobs />} />
+            <Route path="view-applications" element={<ViewApplication />} />
+            <Route path="view-application/:id" element={<ViewApplication />} />
+          </Route>
+        ) : (
+          <Route path="/dashboard/*" element={<Navigate to="/" replace />} />
+        )}
 
         {/* Catch-all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
