@@ -34,11 +34,11 @@ export const AppContextProvider = (props) => {
     try {
       const { data } = await axios.get(backendUrl + "/api/company/company", {
         headers: {
-          token: companyToken, // Fixed variable name
+          token: companyToken,
         },
       });
       if (data.success) {
-        setCompanyData(data.company); // Make sure to set the company data properly
+        setCompanyData(data.company);
       } else {
         toast.error(data.message);
         console.log(data);
