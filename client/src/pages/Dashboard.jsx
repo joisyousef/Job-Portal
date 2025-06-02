@@ -137,8 +137,8 @@ const Dashboard = () => {
             </ul>
           </nav>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 max-sm:p-2">
-            <div className="bg-blue-50 rounded-lg p-4 max-sm:hidden">
+          <div className="absolute bottom-9 left-0 right-0 p-4 max-sm:p-2">
+            <div className="bg-blue-50 rounded-lg p-7 max-sm:hidden">
               <h3 className="text-sm font-medium text-blue-700">Need Help?</h3>
               <p className="text-xs text-gray-600 mt-1">
                 Contact support for assistance with your dashboard.

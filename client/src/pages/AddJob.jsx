@@ -1,6 +1,9 @@
-import { React, useState, useRef, useEffect } from "react";
+import { React, useState, useRef, useEffect, useContext } from "react";
 import Quill from "quill";
 import { JobCategories, JobLocations } from "../assets/assets";
+import axios from "axios";
+import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
 
 const AddJob = () => {
   const [title, setTitle] = useState("");
@@ -12,8 +15,41 @@ const AddJob = () => {
   const editorRef = useRef(null);
   const quillRef = useRef(null);
 
+  const { backendUrl, companyToken } = useContext(AppContext);
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    try {
+      const description = quillRef.current.root.innerHTML;
+      const { data } = await axios.post(
+        backendUrl + "/api/company/post-job",
+        {
+          title,
+          description,
+          location,
+          salary,
+          category,
+          level,
+        },
+        {
+          headers: { token: companyToken },
+        }
+      );
+      if (data.success) {
+        toast.success("Job added successfully!");
+        // Reset form fields
+        setTitle("");
+        setLocation("Egypt");
+        setCategory("Proggramming");
+        setLevel("Beginner");
+        setSalary(0);
+        quillRef.current.root.innerHTML = ""; // Clear the Quill editor
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
   useEffect(() => {
     // Initialize Quill editor only once
@@ -35,7 +71,10 @@ const AddJob = () => {
   }, []);
 
   return (
-    <form className="container p-6 flex flex-col w-full items-start gap-6 bg-white rounded-lg shadow-sm max-w-4xl mx-auto">
+    <form
+      onSubmit={onSubmitHandler}
+      className="container p-6 flex flex-col w-full items-start gap-6 bg-white rounded-lg shadow-sm max-w-4xl mx-auto"
+    >
       <h2 className="text-2xl font-semibold text-gray-800 mb-2">Add New Job</h2>
 
       <div className="w-full">
