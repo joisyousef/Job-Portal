@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import assets from "../assets/assets";
 import { AppContext } from "../context/AppContext";
@@ -7,7 +7,23 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { companyData } = useContext(AppContext);
+  const { companyData, setCompanyData, setCompanyToken } =
+    useContext(AppContext);
+
+  // Function to handle logout
+  const logout = () => {
+    setCompanyData(null);
+    setCompanyToken(null);
+    localStorage.removeItem("companyToken");
+    navigate("/");
+  };
+
+  // Uncomment this if you want to redirect to manage jobs after login
+  // useEffect(() => {
+  //   if (companyData) {
+  //     navigate("/dashboard/manage-jobs");
+  //   }
+  // }, [companyData]);
 
   // Check if we're at the root dashboard path
   const isRootDashboard =
@@ -48,7 +64,10 @@ const Dashboard = () => {
                       </p>
                     </div>
                     <ul className="py-1">
-                      <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2 text-gray-700 transition-colors">
+                      <li
+                        onClick={logout}
+                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2 text-gray-700 transition-colors"
+                      >
                         <span className="text-sm">🚪</span>
                         Logout
                       </li>
