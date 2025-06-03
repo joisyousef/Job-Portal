@@ -34,7 +34,8 @@ const Hero = () => {
         {/* Content */}
         <div className="relative z-10 text-center">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-            Find Your <span className="text-purple-300">Dream Job</span> Today
+            Find Your <span className="text-purple-300">Dream Job</span> Today,
+            <span className="text-purple-300"> Create ATS Resume</span>
           </h1>
           <h2 className="text-xl md:text-2xl lg:text-3xl font-medium mb-4">
             Over <span className="text-yellow-300">10,000+</span> jobs to apply

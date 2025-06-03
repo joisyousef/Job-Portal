@@ -2,11 +2,14 @@ import { createContext, useState, useEffect } from "react";
 import { jobsData } from "../assets/assets";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const { user } = useUser();
+  const { getToken } = useAuth();
 
   const [searchFilter, setSearchFilter] = useState({
     title: "",
@@ -18,15 +21,34 @@ export const AppContextProvider = (props) => {
 
   const [showRecruiterLogin, setShowRecruiterLogin] = useState(false);
 
-  // Fixed variable names (removed typos)
   const [companyToken, setCompanyToken] = useState(null);
   const [companyData, setCompanyData] = useState(null);
+
+  const [userData, setUserData] = useState(null);
+  const [userApplications, setUserApplications] = useState([]);
 
   // Add loading state to track when token is being loaded from localStorage
   const [isTokenLoading, setIsTokenLoading] = useState(true);
 
   const fetchJobs = async () => {
-    setJobs(jobsData);
+    try {
+      const { data } = await axios.get(backendUrl + "/api/jobs/");
+      if (data.success) {
+        setJobs(data.jobs);
+      } else {
+        toast.error(data.message);
+        console.log(data);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+    // If jobs are fetched successfully, set isSearched to true
+    setIsSearched(true);
+    // If jobs are fetched successfully, set searchFilter to an empty object
+    setSearchFilter({
+      title: "",
+      location: "",
+    });
   };
 
   // Function to fetch company data
@@ -49,8 +71,6 @@ export const AppContextProvider = (props) => {
   };
 
   useEffect(() => {
-    fetchJobs();
-
     const storedToken = localStorage.getItem("companyToken");
     if (storedToken) {
       setCompanyToken(storedToken);
@@ -59,12 +79,44 @@ export const AppContextProvider = (props) => {
     setIsTokenLoading(false);
   }, []);
 
+  // Only fetch jobs after token loading is complete
+  useEffect(() => {
+    if (!isTokenLoading) {
+      fetchJobs();
+    }
+  }, [isTokenLoading]);
+
   useEffect(() => {
     if (companyToken) {
       // Fixed variable name
       fetchCompanyData();
     }
-  }, [companyToken]); // Fixed variable name
+  }, [companyToken]);
+
+  // Function to fetch user data
+  const fetchUserData = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(backendUrl + "/api/users/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (data.success) {
+        setUserData(data.user);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+  }, [user]);
 
   const value = {
     setSearchFilter,

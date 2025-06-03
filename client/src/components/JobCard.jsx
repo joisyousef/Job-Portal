@@ -30,7 +30,7 @@ const JobCard = ({ job }) => {
         <div className="flex items-center">
           <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center mr-3 overflow-hidden">
             <img
-              src={assets.company_icon}
+              src={job.companyId.image}
               alt={`Logo for ${job.companyName}`}
               className="h-8 w-8 object-contain"
             />
