@@ -20,6 +20,12 @@ await connectCloudinary();
 
 // Middlewares
 app.use(cors());
+
+// IMPORTANT: Webhook route MUST be defined BEFORE express.json() middleware
+// because webhooks need raw body for signature verification
+app.post("/webhooks", express.raw({ type: "application/json" }), clerkWebhook);
+
+// Apply JSON parsing middleware AFTER webhook routes
 app.use(express.json());
 app.use(clerkMiddleware());
 
@@ -28,7 +34,7 @@ app.get("/", (req, res) => res.send("API Working"));
 app.get("/debug-sentry", function mainHandler(req, res) {
   throw new Error("My first Sentry error!");
 });
-app.post("/webhooks", clerkWebhook);
+
 app.use("/api/company", companyRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/users", userRoutes);

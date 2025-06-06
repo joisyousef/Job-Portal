@@ -42,13 +42,6 @@ export const AppContextProvider = (props) => {
     } catch (error) {
       toast.error(error.message);
     }
-    // If jobs are fetched successfully, set isSearched to true
-    setIsSearched(true);
-    // If jobs are fetched successfully, set searchFilter to an empty object
-    setSearchFilter({
-      title: "",
-      location: "",
-    });
   };
 
   // Function to fetch company data
@@ -88,7 +81,6 @@ export const AppContextProvider = (props) => {
 
   useEffect(() => {
     if (companyToken) {
-      // Fixed variable name
       fetchCompanyData();
     }
   }, [companyToken]);
@@ -97,7 +89,7 @@ export const AppContextProvider = (props) => {
   const fetchUserData = async () => {
     try {
       const token = await getToken();
-      const { data } = await axios.get(backendUrl + "/api/users/user", {
+      const { data } = await axios.get(backendUrl + "/api/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -127,12 +119,16 @@ export const AppContextProvider = (props) => {
     setJobs,
     showRecruiterLogin,
     setShowRecruiterLogin,
-    companyToken, // Fixed variable name
+    companyToken,
     setCompanyToken,
-    companyData, // Fixed variable name
+    companyData,
     setCompanyData,
     backendUrl,
-    isTokenLoading, // Add this to the context value
+    isTokenLoading,
+    userData,
+    setUserData,
+    userApplications,
+    setUserApplications,
   };
 
   return (
