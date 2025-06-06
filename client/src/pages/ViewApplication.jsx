@@ -29,6 +29,31 @@ const ViewApplication = () => {
     }
   };
 
+  // Function to update the status of an applicant
+  const changeJobApplicationStatus = async (id, status) => {
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/company/change-status`,
+        { id, status },
+        {
+          headers: {
+            token: companyToken,
+          },
+        }
+      );
+
+      if (data.success) {
+        // toast.success(data.message);
+        // Refresh the applicants list after status change
+        fetchCompanyJobApplications();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
     if (companyToken) {
       fetchCompanyJobApplications();
@@ -148,16 +173,35 @@ const ViewApplication = () => {
                             👁 Under Review
                           </span>
                         )}
-                        {!applicant.status && (
+                        {/* Show action dropdown for pending, under_review, or no status */}
+                        {(applicant.status === "pending" ||
+                          applicant.status === "under_review" ||
+                          !applicant.status) && (
                           <div className="relative inline-block text-left group">
                             <button className="bg-gray-100 hover:bg-gray-200 h-8 w-8 rounded-full flex items-center justify-center font-bold text-gray-600 transition-colors">
                               ⋮
                             </button>
                             <div className="z-10 hidden absolute right-0 md:right-0 top-full mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg group-hover:block py-1">
-                              <button className="flex w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                              <button
+                                onClick={() =>
+                                  changeJobApplicationStatus(
+                                    applicant._id,
+                                    "accepted"
+                                  )
+                                }
+                                className="flex w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                              >
                                 <span className="mr-2">✓</span> Accept
                               </button>
-                              <button className="flex w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                              <button
+                                onClick={() =>
+                                  changeJobApplicationStatus(
+                                    applicant._id,
+                                    "rejected"
+                                  )
+                                }
+                                className="flex w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                              >
                                 <span className="mr-2">✕</span> Reject
                               </button>
                               <div className="border-t border-gray-100 my-1"></div>

@@ -10,6 +10,7 @@ import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "@clerk/clerk-react";
+import { useEffect } from "react";
 
 const Applications = () => {
   const { user } = useUser();
@@ -18,8 +19,13 @@ const Applications = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [resume, setResume] = useState(null);
 
-  const { backendUrl, userData, userApplications, fetchUserData } =
-    useContext(AppContext);
+  const {
+    backendUrl,
+    userData,
+    userApplications,
+    fetchUserData,
+    fetchUserApplications,
+  } = useContext(AppContext);
 
   const updateRusume = async () => {
     try {
@@ -49,6 +55,13 @@ const Applications = () => {
     setIsEdit(false);
     setResume(null);
   };
+
+  useEffect(() => {
+    if (user) {
+      // fetchUserData();
+      fetchUserApplications();
+    }
+  }, [user]);
 
   return (
     <>
