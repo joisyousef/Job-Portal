@@ -99,6 +99,7 @@ const ApplyJob = () => {
         toast.success(
           response.data.message || "Application submitted successfully!"
         );
+        fetchUserApplications();
       } else {
         toast.error(response.data?.message || "Failed to submit application");
       }
@@ -205,17 +206,18 @@ const ApplyJob = () => {
               <h2>
                 More Jobs from {JobData.companyId?.name || "this Company"}
               </h2>
-
-              {jobs
-                .filter(
-                  (job) =>
-                    job._id !== JobData._id &&
-                    job.companyId?._id === JobData.companyId?._id
-                )
-                .slice(0, 4)
-                .map((job, index) => (
-                  <JobCard key={index} job={job} />
-                ))}
+              {(() => {
+                // Set of applied jobIds
+                const appliedJobIds = new Set(
+                  Array.isArray(userApplications)
+                    ? userApplications.map((app) => app.jobId && app.jobId._id)
+                    : []
+                );
+                return jobs
+                  .filter((job) => !appliedJobIds.has(job._id))
+                  .slice(0, 4)
+                  .map((job, index) => <JobCard key={index} job={job} />);
+              })()}
             </div>
           </div>
         </div>
