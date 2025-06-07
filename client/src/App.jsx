@@ -1,9 +1,10 @@
-import { React, useContext } from "react";
+import React, { useContext } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import ApplyJob from "./pages/ApplyJob";
 import Applications from "./pages/Application";
 import RecruitersLogin from "./components/RecruitersLogin";
+import UserLogin from "./components/userLogin.jsx";
 import { AppContext } from "./context/AppContext";
 import Dashboard from "./pages/Dashboard";
 import AddJob from "./pages/AddJob";
@@ -14,10 +15,9 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
-  const { showRecruiterLogin, companyToken, isTokenLoading } =
+  const { showRecruiterLogin, showUserLogin, companyToken, isTokenLoading } =
     useContext(AppContext);
 
-  // Show loading spinner or nothing while token is being loaded from localStorage
   if (isTokenLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -29,11 +29,11 @@ const App = () => {
   return (
     <div>
       {showRecruiterLogin && <RecruitersLogin />}
+      {showUserLogin && <UserLogin />}
       <ToastContainer />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
-
         <Route path="/apply-job/:id" element={<ApplyJob />} />
         <Route path="/applications" element={<Applications />} />
 
@@ -49,7 +49,7 @@ const App = () => {
           <Route path="/dashboard/*" element={<Navigate to="/" replace />} />
         )}
 
-        {/* Catch-all route - redirect to home */}
+        {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

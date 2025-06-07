@@ -1,15 +1,23 @@
-import { React, useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
-import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import { UserButton } from "@clerk/clerk-react";
 import { AppContext } from "../context/AppContext";
 
 const Navbar = () => {
-  const { openSignIn } = useClerk();
-  const { user } = useUser();
   const navigate = useNavigate();
+  const {
+    showRecruiterLogin,
+    setShowRecruiterLogin,
+    showUserLogin,
+    setShowUserLogin,
+    companyData,
+    userData,
+  } = useContext(AppContext);
 
-  const { setShowRecruiterLogin } = useContext(AppContext);
+  // Determine authentication states
+  const isRecruiterLoggedIn = Boolean(companyData);
+  const isUserLoggedIn = Boolean(userData);
 
   return (
     <div className="shadow-md py-4 bg-white border-b border-gray-100">
@@ -22,8 +30,8 @@ const Navbar = () => {
           alt="Logo"
         />
 
-        {/* Centered Create Resume button */}
-        {user && (
+        {/* Center Create Resume button for logged-in users */}
+        {isUserLoggedIn && (
           <Link
             to="/create-resume"
             className="absolute left-1/2 transform -translate-x-1/2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium shadow-sm hover:shadow-md transition duration-300"
@@ -33,43 +41,55 @@ const Navbar = () => {
         )}
 
         {/* Right-side controls */}
-        {user ? (
-          <div className="flex items-center gap-4">
-            <Link
-              to="/applications"
-              className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium"
-            >
-              Applied Jobs
-            </Link>
+        <div className="flex items-center gap-4">
+          {isUserLoggedIn ? (
+            <>
+              <Link
+                to="/applications"
+                className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium"
+              >
+                Applied Jobs
+              </Link>
 
-            <div className="h-5 w-px bg-gray-300"></div>
+              <div className="h-5 w-px bg-gray-300"></div>
 
-            <p className="max-sm:hidden text-gray-700 font-medium">
-              Hi, {user.firstName + " " + user.lastName}
-            </p>
-
-            <div className="border-2 border-transparent hover:border-blue-500 rounded-full transition duration-300">
-              <UserButton />
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4">
+              <p className="max-sm:hidden text-gray-700 font-medium">
+                Hi, {userData.name}
+              </p>
+            </>
+          ) : (
             <button
-              onClick={() => {
-                setShowRecruiterLogin(true);
-              }}
+              onClick={() => setShowUserLogin(true)}
+              className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition duration-300 font-medium shadow-sm hover:shadow-md"
+            >
+              User Login
+            </button>
+          )}
+
+          {isRecruiterLoggedIn ? (
+            <>
+              <Link
+                to="/dashboard"
+                className="text-gray-700 hover:text-blue-600 transition duration-300 font-medium"
+              >
+                Dashboard
+              </Link>
+
+              <div className="h-5 w-px bg-gray-300"></div>
+
+              <p className="max-sm:hidden text-gray-700 font-medium">
+                {companyData.name}
+              </p>
+            </>
+          ) : (
+            <button
+              onClick={() => setShowRecruiterLogin(true)}
               className="text-gray-600 cursor-pointer hover:text-blue-600 transition duration-300 hidden sm:block font-medium"
             >
               Recruiter Login
             </button>
-            <button
-              onClick={openSignIn}
-              className="bg-blue-600 text-white px-6 sm:px-9 py-2 rounded-full cursor-pointer hover:bg-blue-700 transition duration-300 font-medium shadow-sm hover:shadow-md"
-            >
-              Login
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

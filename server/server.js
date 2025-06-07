@@ -27,7 +27,8 @@ app.post("/webhooks", express.raw({ type: "application/json" }), clerkWebhook);
 
 // Apply JSON parsing middleware AFTER webhook routes
 app.use(express.json());
-app.use(clerkMiddleware());
+app.use(express.urlencoded({ extended: true })); // ADD THIS LINE - for form data parsing
+// app.use(clerkMiddleware()); // COMMENT THIS OUT temporarily - it might be interfering
 
 // Routes
 app.get("/", (req, res) => res.send("API Working"));
