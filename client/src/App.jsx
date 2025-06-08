@@ -3,6 +3,7 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import ApplyJob from "./pages/ApplyJob";
 import Applications from "./pages/Application";
+import ResumeMatcherPage from "./pages/ResumeMathcer";
 import RecruitersLogin from "./components/RecruitersLogin";
 import { AppContext } from "./context/AppContext";
 import Dashboard from "./pages/Dashboard";
@@ -20,9 +21,9 @@ const App = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
-        
         <Route path="/apply-job/:id" element={<ApplyJob />} />
         <Route path="/applications" element={<Applications />} />
+        <Route path="/resume-matcher" element={<ResumeMatcherPage />} />
 
         {/* Dashboard with nested routes */}
         <Route path="/dashboard" element={<Dashboard />}>
