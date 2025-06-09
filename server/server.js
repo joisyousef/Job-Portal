@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/node";
 import { clerkWebhook } from "./controllers/webhooks.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
-// import resumeMatcherRoutes from "./routes/resumeMatcherRoutes.js"; // Add this import
+import resumeMatcherRoutes from "./routes/resumeMatcherRoutes.js"; // Add this import
 import connectCloudinary from "./configs/cloudinary.js";
 
 // Initialize express app
@@ -29,7 +29,7 @@ app.get("/debug-sentry", function mainHandler(req, res) {
 app.post("/webhooks", clerkWebhook);
 app.use("/api/company", companyRoutes);
 app.use("/api/jobs", jobRoutes);
-// app.use("/api", resumeMatcherRoutes); // Add this line
+app.use("/api", resumeMatcherRoutes); // Add this line
 
 // Port
 const PORT = process.env.PORT || 5000;
