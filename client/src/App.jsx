@@ -5,6 +5,7 @@ import ApplyJob from "./pages/ApplyJob";
 import Applications from "./pages/Application";
 import ResumeMatcherPage from "./pages/ResumeMathcer";
 import RecruitersLogin from "./components/RecruitersLogin";
+import UserLogin from "./components/UserLogin";
 import { AppContext } from "./context/AppContext";
 import Dashboard from "./pages/Dashboard";
 import AddJob from "./pages/AddJob";
@@ -13,11 +14,12 @@ import ViewApplication from "./pages/ViewApplication";
 import "quill/dist/quill.snow.css";
 
 const App = () => {
-  const { showRecruiterLogin } = useContext(AppContext);
+  const { showRecruiterLogin, showUserLogin } = useContext(AppContext);
 
   return (
     <div>
       {showRecruiterLogin && <RecruitersLogin />}
+      {showUserLogin && <UserLogin />}
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />

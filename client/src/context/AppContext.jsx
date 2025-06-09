@@ -14,6 +14,9 @@ export const AppContextProvider = (props) => {
 
   const [showRecruiterLogin, setShowRecruiterLogin] = useState(false);
 
+  // Add state for UserLogin modal
+  const [showUserLogin, setShowUserLogin] = useState(false);
+
   const fetchJobs = async () => {
     setJobs(jobsData);
   };
@@ -31,6 +34,9 @@ export const AppContextProvider = (props) => {
     setJobs,
     showRecruiterLogin,
     setShowRecruiterLogin,
+    // Add UserLogin state to context
+    showUserLogin,
+    setShowUserLogin,
   };
   return (
     <AppContext.Provider value={value}>{props.children}</AppContext.Provider>

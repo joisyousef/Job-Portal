@@ -9,7 +9,7 @@ const Navbar = () => {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const { setShowRecruiterLogin } = useContext(AppContext);
+  const { setShowRecruiterLogin, setShowUserLogin } = useContext(AppContext);
 
   return (
     <nav className="backdrop-blur-sm bg-white/95 shadow-lg border-b border-gray-200/50 sticky top-0 z-50">
@@ -138,7 +138,7 @@ const Navbar = () => {
               </button>
 
               <button
-                onClick={openSignIn}
+                onClick={() => setShowUserLogin(true)}
                 className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 sm:px-8 py-2.5 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
               >
                 <span className="relative z-10 flex items-center gap-2">
