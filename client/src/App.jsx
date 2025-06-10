@@ -12,6 +12,7 @@ import AddJob from "./pages/AddJob";
 import ManageJobs from "./pages/ManageJobs";
 import ViewApplication from "./pages/ViewApplication";
 import "quill/dist/quill.snow.css";
+import ResumeBuilder from "./pages/ResumeBuilder";
 
 const App = () => {
   const { showRecruiterLogin, showUserLogin } = useContext(AppContext);
@@ -38,6 +39,7 @@ const App = () => {
           <Route path="view-applications" element={<ViewApplication />} />
           <Route path="view-application/:id" element={<ViewApplication />} />
         </Route>
+        <Route path="/create-resume" element={<ResumeBuilder />} />
 
         {/* Catch-all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />

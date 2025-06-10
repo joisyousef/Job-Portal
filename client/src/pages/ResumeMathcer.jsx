@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+const API_BASE_URL = "http://localhost:5001";
 
 const ResumeMatcherPage = () => {
   const [resumeFile, setResumeFile] = useState(null);
@@ -199,6 +201,43 @@ const ResumeMatcherPage = () => {
     }, 3000);
   };
 
+  const checkApiHealth = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/resume-matcher/health`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Health:", data);
+        return true;
+      } else {
+        console.error("API health check failed:", response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error("API health check error:", error);
+      return false;
+    }
+  };
+  useEffect(() => {
+    // Check API health on component mount
+    checkApiHealth().then((isHealthy) => {
+      if (!isHealthy) {
+        showToast(
+          "API service is unavailable. Please try again later.",
+          "error"
+        );
+      }
+    });
+  }, []);
+
   const handleFileUpload = (file) => {
     const allowedTypes = [
       "application/pdf",
@@ -262,12 +301,15 @@ const ResumeMatcherPage = () => {
       formData.append("resume", resumeFile);
       formData.append("jobDescription", jobDescription);
 
-      // Replace with your actual backend URL
-      const backendUrl = "http://localhost:5001"; // Update this URL
-      const response = await fetch(`${backendUrl}/api/match-resume`, {
+      const response = await fetch(`${API_BASE_URL}/api/match-resume`, {
         method: "POST",
         body: formData,
+        // Don't set Content-Type header for FormData - browser will set it automatically
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
 
@@ -275,16 +317,45 @@ const ResumeMatcherPage = () => {
         setResult({
           score: data.score,
           feedback: data.feedback,
+          // Add any additional fields returned by your API
+          ...(data.suggestions && { suggestions: data.suggestions }),
+          ...(data.missingKeywords && {
+            missingKeywords: data.missingKeywords,
+          }),
+          ...(data.matchedKeywords && {
+            matchedKeywords: data.matchedKeywords,
+          }),
         });
         showToast("Resume analysis completed!", "success");
       } else {
-        showToast(data.error || "Analysis failed", "error");
+        throw new Error(data.error || data.message || "Analysis failed");
       }
     } catch (error) {
       console.error("Error:", error);
-      showToast("Failed to analyze resume", "error");
+
+      // Handle different types of errors
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
+        showToast(
+          "Cannot connect to server. Please check your connection.",
+          "error"
+        );
+      } else if (error.message.includes("413")) {
+        showToast("File too large. Please use a smaller file.", "error");
+      } else if (error.message.includes("400")) {
+        showToast("Invalid file format or missing data.", "error");
+      } else if (error.message.includes("500")) {
+        showToast("Server error. Please try again later.", "error");
+      } else {
+        showToast(error.message || "Failed to analyze resume", "error");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    if (resumeFile && jobDescription.trim()) {
+      handleSubmit({ preventDefault: () => {} });
     }
   };
 
@@ -645,6 +716,54 @@ const ResumeMatcherPage = () => {
       </div>
     </div>
   );
+};
+
+const ErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const handleError = (error) => {
+      setHasError(true);
+      setErrorMessage(error.message);
+      console.error("Application error:", error);
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", (event) => {
+      handleError(new Error(event.reason));
+    });
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleError);
+    };
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Something went wrong
+          </h2>
+          <p className="text-gray-600 mb-6">{errorMessage}</p>
+          <button
+            onClick={() => {
+              setHasError(false);
+              setErrorMessage("");
+              window.location.reload();
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
 };
 
 export default ResumeMatcherPage;
