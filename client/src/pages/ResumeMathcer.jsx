@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+const API_BASE_URL = "http://localhost:5001";
+import Navbar from "../components/Navbar";
 
 const ResumeMatcherPage = () => {
   const [resumeFile, setResumeFile] = useState(null);
@@ -199,6 +202,43 @@ const ResumeMatcherPage = () => {
     }, 3000);
   };
 
+  const checkApiHealth = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/resume-matcher/health`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Health:", data);
+        return true;
+      } else {
+        console.error("API health check failed:", response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error("API health check error:", error);
+      return false;
+    }
+  };
+  useEffect(() => {
+    // Check API health on component mount
+    checkApiHealth().then((isHealthy) => {
+      if (!isHealthy) {
+        showToast(
+          "API service is unavailable. Please try again later.",
+          "error"
+        );
+      }
+    });
+  }, []);
+
   const handleFileUpload = (file) => {
     const allowedTypes = [
       "application/pdf",
@@ -262,12 +302,15 @@ const ResumeMatcherPage = () => {
       formData.append("resume", resumeFile);
       formData.append("jobDescription", jobDescription);
 
-      // Replace with your actual backend URL
-      const backendUrl = "http://localhost:5001"; // Update this URL
-      const response = await fetch(`${backendUrl}/api/match-resume`, {
+      const response = await fetch(`${API_BASE_URL}/api/match-resume`, {
         method: "POST",
         body: formData,
+        // Don't set Content-Type header for FormData - browser will set it automatically
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
 
@@ -275,16 +318,45 @@ const ResumeMatcherPage = () => {
         setResult({
           score: data.score,
           feedback: data.feedback,
+          // Add any additional fields returned by your API
+          ...(data.suggestions && { suggestions: data.suggestions }),
+          ...(data.missingKeywords && {
+            missingKeywords: data.missingKeywords,
+          }),
+          ...(data.matchedKeywords && {
+            matchedKeywords: data.matchedKeywords,
+          }),
         });
         showToast("Resume analysis completed!", "success");
       } else {
-        showToast(data.error || "Analysis failed", "error");
+        throw new Error(data.error || data.message || "Analysis failed");
       }
     } catch (error) {
       console.error("Error:", error);
-      showToast("Failed to analyze resume", "error");
+
+      // Handle different types of errors
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
+        showToast(
+          "Cannot connect to server. Please check your connection.",
+          "error"
+        );
+      } else if (error.message.includes("413")) {
+        showToast("File too large. Please use a smaller file.", "error");
+      } else if (error.message.includes("400")) {
+        showToast("Invalid file format or missing data.", "error");
+      } else if (error.message.includes("500")) {
+        showToast("Server error. Please try again later.", "error");
+      } else {
+        showToast(error.message || "Failed to analyze resume", "error");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    if (resumeFile && jobDescription.trim()) {
+      handleSubmit({ preventDefault: () => {} });
     }
   };
 
@@ -307,334 +379,343 @@ const ResumeMatcherPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute top-40 right-20 w-48 h-48 bg-purple-200 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-indigo-200 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute bottom-20 right-1/3 w-36 h-36 bg-pink-200 rounded-full opacity-20 blur-xl"></div>
+    <>
+      {/* <Navbar /> */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 blur-xl"></div>
+          <div className="absolute top-40 right-20 w-48 h-48 bg-purple-200 rounded-full opacity-20 blur-xl"></div>
+          <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-indigo-200 rounded-full opacity-20 blur-xl"></div>
+          <div className="absolute bottom-20 right-1/3 w-36 h-36 bg-pink-200 rounded-full opacity-20 blur-xl"></div>
 
-        {/* Geometric Shapes */}
-        <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2">
-          <div className="w-2 h-2 bg-blue-400 rounded-full opacity-30"></div>
-        </div>
-        <div className="absolute top-1/3 left-1/4">
-          <div className="w-1 h-1 bg-purple-400 rounded-full opacity-40"></div>
-        </div>
-        <div className="absolute bottom-1/4 right-1/4">
-          <div className="w-2 h-2 bg-indigo-400 rounded-full opacity-30"></div>
-        </div>
-        <div className="absolute top-2/3 left-3/4">
-          <div className="w-1 h-1 bg-pink-400 rounded-full opacity-40"></div>
-        </div>
-      </div>
-
-      <div className="relative z-10 py-12 px-4">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-6">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-30"></div>
-                <div className="relative bg-white p-4 rounded-full shadow-lg">
-                  <TargetIcon className="w-10 h-10 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Resume Matcher
-            </h1>
-            <p className="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
-              Discover how well your resume aligns with job requirements using
-              AI-powered analysis. Get personalized insights and recommendations
-              to boost your application success rate.
-            </p>
+          {/* Geometric Shapes */}
+          <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2">
+            <div className="w-2 h-2 bg-blue-400 rounded-full opacity-30"></div>
           </div>
+          <div className="absolute top-1/3 left-1/4">
+            <div className="w-1 h-1 bg-purple-400 rounded-full opacity-40"></div>
+          </div>
+          <div className="absolute bottom-1/4 right-1/4">
+            <div className="w-2 h-2 bg-indigo-400 rounded-full opacity-30"></div>
+          </div>
+          <div className="absolute top-2/3 left-3/4">
+            <div className="w-1 h-1 bg-pink-400 rounded-full opacity-40"></div>
+          </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left Column - Upload and Form */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                <div className="p-8 space-y-8">
-                  {/* Resume Upload Section */}
-                  <div>
-                    <label className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-                      <FileTextIcon className="w-5 h-5 mr-2 text-blue-600" />
-                      Upload Your Resume
-                    </label>
-                    <div
-                      className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
-                        dragActive
-                          ? "border-blue-400 bg-blue-50/50 scale-105"
-                          : resumeFile
-                          ? "border-emerald-400 bg-emerald-50/50"
-                          : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/30"
-                      }`}
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onClick={() =>
-                        document.querySelector('input[type="file"]').click()
-                      }
-                    >
-                      {resumeFile ? (
-                        <div className="text-emerald-600">
-                          <div className="relative inline-block mb-4">
-                            <CheckCircleIcon className="w-12 h-12 mx-auto" />
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full animate-pulse"></div>
-                          </div>
-                          <p className="font-semibold text-lg">
-                            {resumeFile.name}
-                          </p>
-                          <p className="text-sm text-emerald-500 mt-1">
-                            {(resumeFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="text-gray-500">
-                          <UploadIcon />
-                          <p className="font-semibold text-lg mb-2">
-                            Drop your resume here
-                          </p>
-                          <p className="text-sm">
-                            or click to browse your files
-                          </p>
-                          <p className="text-xs mt-2 text-gray-400">
-                            PDF, DOCX, and TXT files (max 16MB)
-                          </p>
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.docx,.txt"
-                        onChange={(e) => {
-                          if (e.target.files[0]) {
-                            handleFileUpload(e.target.files[0]);
-                          }
-                        }}
-                        onClick={(e) => {
-                          const input = e.target;
-                          input.value = "";
-                        }}
-                      />
-                      {!resumeFile && (
-                        <button
-                          type="button"
-                          className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-medium"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            document
-                              .querySelector('input[type="file"]')
-                              .click();
-                          }}
-                        >
-                          Choose File
-                        </button>
-                      )}
-                    </div>
+        <div className="relative z-10 py-12 px-4">
+          <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center mb-6">
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-30"></div>
+                  <div className="relative bg-white p-4 rounded-full shadow-lg">
+                    <TargetIcon className="w-10 h-10 text-blue-600" />
                   </div>
-
-                  {/* Job Description Section */}
-                  <div>
-                    <label className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-                      <BriefcaseIcon className="w-5 h-5 mr-2 text-blue-600" />
-                      Job Description
-                    </label>
-                    <div className="relative">
-                      <textarea
-                        value={jobDescription}
-                        onChange={(e) => setJobDescription(e.target.value)}
-                        placeholder="Paste the complete job description here for accurate analysis..."
-                        className="w-full h-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-700 placeholder-gray-400 shadow-sm"
-                        required
-                      />
-                      <div className="absolute bottom-3 right-3 text-xs text-gray-400">
-                        {jobDescription.length} characters
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-2 flex items-center">
-                      <LightbulbIcon className="w-4 h-4 mr-1" />
-                      Copy and paste the complete job posting for the most
-                      accurate analysis
-                    </p>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={loading || !resumeFile || !jobDescription.trim()}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center font-semibold text-lg shadow-lg transform hover:scale-[1.02] hover:shadow-xl"
-                  >
-                    {loading ? (
-                      <>
-                        <LoaderIcon className="w-6 h-6 mr-3" />
-                        Analyzing Your Resume...
-                      </>
-                    ) : (
-                      <>
-                        <TargetIcon className="w-6 h-6 mr-3" />
-                        Analyze Resume Match
-                      </>
-                    )}
-                  </button>
                 </div>
               </div>
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                Resume Matcher
+              </h1>
+              <p className="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
+                Discover how well your resume aligns with job requirements using
+                AI-powered analysis. Get personalized insights and
+                recommendations to boost your application success rate.
+              </p>
+            </div>
 
-              {/* Results Section */}
-              {result && (
+            {/* Main Content */}
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Left Column - Upload and Form */}
+              <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                  <div className="p-8">
-                    <div className="flex items-center mb-6">
-                      <TrendingUpIcon className="w-6 h-6 text-blue-600 mr-3" />
-                      <h3 className="text-2xl font-bold text-gray-900">
-                        Analysis Results
-                      </h3>
+                  <div className="p-8 space-y-8">
+                    {/* Resume Upload Section */}
+                    <div>
+                      <label className="flex items-center text-lg font-semibold text-gray-800 mb-4">
+                        <FileTextIcon className="w-5 h-5 mr-2 text-blue-600" />
+                        Upload Your Resume
+                      </label>
+                      <div
+                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
+                          dragActive
+                            ? "border-blue-400 bg-blue-50/50 scale-105"
+                            : resumeFile
+                            ? "border-emerald-400 bg-emerald-50/50"
+                            : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/30"
+                        }`}
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onClick={() =>
+                          document.querySelector('input[type="file"]').click()
+                        }
+                      >
+                        {resumeFile ? (
+                          <div className="text-emerald-600">
+                            <div className="relative inline-block mb-4">
+                              <CheckCircleIcon className="w-12 h-12 mx-auto" />
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full animate-pulse"></div>
+                            </div>
+                            <p className="font-semibold text-lg">
+                              {resumeFile.name}
+                            </p>
+                            <p className="text-sm text-emerald-500 mt-1">
+                              {(resumeFile.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-gray-500">
+                            <UploadIcon />
+                            <p className="font-semibold text-lg mb-2">
+                              Drop your resume here
+                            </p>
+                            <p className="text-sm">
+                              or click to browse your files
+                            </p>
+                            <p className="text-xs mt-2 text-gray-400">
+                              PDF, DOCX, and TXT files (max 16MB)
+                            </p>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.docx,.txt"
+                          onChange={(e) => {
+                            if (e.target.files[0]) {
+                              handleFileUpload(e.target.files[0]);
+                            }
+                          }}
+                          onClick={(e) => {
+                            const input = e.target;
+                            input.value = "";
+                          }}
+                        />
+                        {!resumeFile && (
+                          <button
+                            type="button"
+                            className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              document
+                                .querySelector('input[type="file"]')
+                                .click();
+                            }}
+                          >
+                            Choose File
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Score Display */}
-                    <div className="mb-8">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-lg font-semibold text-gray-700">
-                          Match Score
-                        </span>
-                        <div
-                          className={`flex items-center px-4 py-2 rounded-full border ${getScoreColor(
-                            result.score
-                          )}`}
-                        >
-                          {getScoreIcon(result.score)}
-                          <span className="ml-2 font-bold text-xl">
-                            {result.score}%
+                    {/* Job Description Section */}
+                    <div>
+                      <label className="flex items-center text-lg font-semibold text-gray-800 mb-4">
+                        <BriefcaseIcon className="w-5 h-5 mr-2 text-blue-600" />
+                        Job Description
+                      </label>
+                      <div className="relative">
+                        <textarea
+                          value={jobDescription}
+                          onChange={(e) => setJobDescription(e.target.value)}
+                          placeholder="Paste the complete job description here for accurate analysis..."
+                          className="w-full h-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-700 placeholder-gray-400 shadow-sm"
+                          required
+                        />
+                        <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                          {jobDescription.length} characters
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2 flex items-center">
+                        <LightbulbIcon className="w-4 h-4 mr-1" />
+                        Copy and paste the complete job posting for the most
+                        accurate analysis
+                      </p>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      onClick={handleSubmit}
+                      disabled={
+                        loading || !resumeFile || !jobDescription.trim()
+                      }
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center font-semibold text-lg shadow-lg transform hover:scale-[1.02] hover:shadow-xl"
+                    >
+                      {loading ? (
+                        <>
+                          <LoaderIcon className="w-6 h-6 mr-3" />
+                          Analyzing Your Resume...
+                        </>
+                      ) : (
+                        <>
+                          <TargetIcon className="w-6 h-6 mr-3" />
+                          Analyze Resume Match
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Results Section */}
+                {result && (
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                    <div className="p-8">
+                      <div className="flex items-center mb-6">
+                        <TrendingUpIcon className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-2xl font-bold text-gray-900">
+                          Analysis Results
+                        </h3>
+                      </div>
+
+                      {/* Score Display */}
+                      <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-lg font-semibold text-gray-700">
+                            Match Score
                           </span>
+                          <div
+                            className={`flex items-center px-4 py-2 rounded-full border ${getScoreColor(
+                              result.score
+                            )}`}
+                          >
+                            {getScoreIcon(result.score)}
+                            <span className="ml-2 font-bold text-xl">
+                              {result.score}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                          <div
+                            className={`h-full bg-gradient-to-r ${getScoreGradient(
+                              result.score
+                            )} transition-all duration-1000 ease-out shadow-lg`}
+                            style={{ width: `${result.score}%` }}
+                          >
+                            <div className="h-full bg-white/20 animate-pulse"></div>
+                          </div>
                         </div>
                       </div>
-                      <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                        <div
-                          className={`h-full bg-gradient-to-r ${getScoreGradient(
-                            result.score
-                          )} transition-all duration-1000 ease-out shadow-lg`}
-                          style={{ width: `${result.score}%` }}
-                        >
-                          <div className="h-full bg-white/20 animate-pulse"></div>
-                        </div>
+
+                      {/* Feedback */}
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <StarIcon className="w-5 h-5 text-blue-600 mr-2" />
+                          Personalized Recommendations
+                        </h4>
+                        <p className="text-gray-700 leading-relaxed">
+                          {result.feedback}
+                        </p>
+                      </div>
+
+                      {/* Score Interpretation */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                        <p className="text-sm text-gray-700">
+                          <strong className="text-gray-900">
+                            Score Interpretation:{" "}
+                          </strong>
+                          {result.score >= 80 &&
+                            "Excellent match! Your resume aligns very well with the job requirements."}
+                          {result.score >= 60 &&
+                            result.score < 80 &&
+                            "Good match! Consider adding some missing keywords to improve your score."}
+                          {result.score < 60 &&
+                            "Consider significant updates to better match the job requirements."}
+                        </p>
                       </div>
                     </div>
+                  </div>
+                )}
+              </div>
 
-                    {/* Feedback */}
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                        <StarIcon className="w-5 h-5 text-blue-600 mr-2" />
-                        Personalized Recommendations
+              {/* Right Column - Tips */}
+              <div className="lg:col-span-1">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 sticky top-8">
+                  <div className="flex items-center mb-6">
+                    <LightbulbIcon className="w-6 h-6 text-amber-500 mr-3" />
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Pro Tips
+                    </h3>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-800 flex items-center">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                        Resume Optimization
                       </h4>
-                      <p className="text-gray-700 leading-relaxed">
-                        {result.feedback}
-                      </p>
+                      <ul className="text-sm text-gray-600 space-y-2 ml-4">
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          Include relevant keywords from the job description
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          Highlight specific skills mentioned in the posting
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          Use action verbs and quantifiable achievements
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          Match the job title and required experience level
+                        </li>
+                      </ul>
                     </div>
 
-                    {/* Score Interpretation */}
-                    <div className="mt-6 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
-                      <p className="text-sm text-gray-700">
-                        <strong className="text-gray-900">
-                          Score Interpretation:{" "}
-                        </strong>
-                        {result.score >= 80 &&
-                          "Excellent match! Your resume aligns very well with the job requirements."}
-                        {result.score >= 60 &&
-                          result.score < 80 &&
-                          "Good match! Consider adding some missing keywords to improve your score."}
-                        {result.score < 60 &&
-                          "Consider significant updates to better match the job requirements."}
-                      </p>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-800 flex items-center">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                        File Guidelines
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2 ml-4">
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-2">•</span>
+                          Use PDF format for best text extraction
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-2">•</span>
+                          Ensure text is selectable (not image-based)
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-2">•</span>
+                          Keep file size under 16MB
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-2">•</span>
+                          Use standard fonts and formatting
+                        </li>
+                      </ul>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
 
-            {/* Right Column - Tips */}
-            <div className="lg:col-span-1">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 sticky top-8">
-                <div className="flex items-center mb-6">
-                  <LightbulbIcon className="w-6 h-6 text-amber-500 mr-3" />
-                  <h3 className="text-xl font-bold text-gray-900">Pro Tips</h3>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-800 flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                      Resume Optimization
+                  {/* Score Legend */}
+                  <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-3 text-sm">
+                      Score Legend
                     </h4>
-                    <ul className="text-sm text-gray-600 space-y-2 ml-4">
-                      <li className="flex items-start">
-                        <span className="text-blue-500 mr-2">•</span>
-                        Include relevant keywords from the job description
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-blue-500 mr-2">•</span>
-                        Highlight specific skills mentioned in the posting
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-blue-500 mr-2">•</span>
-                        Use action verbs and quantifiable achievements
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-blue-500 mr-2">•</span>
-                        Match the job title and required experience level
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-800 flex items-center">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
-                      File Guidelines
-                    </h4>
-                    <ul className="text-sm text-gray-600 space-y-2 ml-4">
-                      <li className="flex items-start">
-                        <span className="text-purple-500 mr-2">•</span>
-                        Use PDF format for best text extraction
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-purple-500 mr-2">•</span>
-                        Ensure text is selectable (not image-based)
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-purple-500 mr-2">•</span>
-                        Keep file size under 16MB
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-purple-500 mr-2">•</span>
-                        Use standard fonts and formatting
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Score Legend */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3 text-sm">
-                    Score Legend
-                  </h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-emerald-500 rounded-full mr-2"></div>
-                      <span className="text-gray-600">
-                        80-100%: Excellent Match
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
-                      <span className="text-gray-600">60-79%: Good Match</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                      <span className="text-gray-600">
-                        0-59%: Needs Improvement
-                      </span>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-emerald-500 rounded-full mr-2"></div>
+                        <span className="text-gray-600">
+                          80-100%: Excellent Match
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
+                        <span className="text-gray-600">
+                          60-79%: Good Match
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                        <span className="text-gray-600">
+                          0-59%: Needs Improvement
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -643,8 +724,56 @@ const ResumeMatcherPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
+};
+
+const ErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const handleError = (error) => {
+      setHasError(true);
+      setErrorMessage(error.message);
+      console.error("Application error:", error);
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", (event) => {
+      handleError(new Error(event.reason));
+    });
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleError);
+    };
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Something went wrong
+          </h2>
+          <p className="text-gray-600 mb-6">{errorMessage}</p>
+          <button
+            onClick={() => {
+              setHasError(false);
+              setErrorMessage("");
+              window.location.reload();
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
 };
 
 export default ResumeMatcherPage;

@@ -1,12 +1,9 @@
 import express from "express";
 import {
-  getJobs,
-  getJobById,
   searchAllJobs,
   searchExternalJobs,
   getJobsByCompany,
   getJobsBySkills,
-  // ... your other existing imports
 } from "../controllers/jobsController.js";
 import {
   searchJobsValidation,
@@ -19,22 +16,17 @@ import {
 
 const router = express.Router();
 
-// Your existing routes
-router.get("/", getJobs);
-router.get("/:id", getJobById);
-// ... your other existing routes
-
-// NEW: Search routes
-router.get("/search/all", searchRateLimit, searchJobsValidation, searchAllJobs);
+// Search routes
+router.get("/all", searchRateLimit, searchJobsValidation, searchAllJobs);
 router.get(
-  "/search/external",
+  "/external",
   externalJobsRateLimit,
   searchJobsValidation,
   searchExternalJobs
 );
-router.get("/search/company/:company", externalJobsRateLimit, getJobsByCompany);
+router.get("/company/:company", externalJobsRateLimit, getJobsByCompany);
 router.post(
-  "/search/skills",
+  "/skills",
   externalJobsRateLimit,
   skillsSearchValidation,
   getJobsBySkills
