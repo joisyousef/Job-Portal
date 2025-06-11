@@ -12,6 +12,10 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.26.1",
     "axios": "^1.9.0",
+<<<<<<< HEAD
+=======
+    "html2pdf.js": "^0.10.3",
+>>>>>>> Testing
     "k-convert": "^1.0.6",
     "moment": "^2.30.1",
     "quill": "^2.0.3",

@@ -31,6 +31,9 @@ export const AppContextProvider = (props) => {
   // Add loading state to track when token is being loaded from localStorage
   const [isTokenLoading, setIsTokenLoading] = useState(true);
 
+  // Add state for UserLogin modal
+  const [showUserLogin, setShowUserLogin] = useState(false);
+
   const fetchJobs = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/jobs/");
@@ -137,6 +140,7 @@ export const AppContextProvider = (props) => {
     setJobs,
     showRecruiterLogin,
     setShowRecruiterLogin,
+<<<<<<< HEAD
     companyToken,
     setCompanyToken,
     companyData,
@@ -149,6 +153,9 @@ export const AppContextProvider = (props) => {
     setUserApplications,
     fetchUserData,
     fetchUserApplications,
+=======
+    // Add UserLogin state to context
+>>>>>>> Testing
     showUserLogin,
     setShowUserLogin,
   };
