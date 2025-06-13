@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 const API_BASE_URL = "http://localhost:5001";
+<<<<<<< HEAD
 import Navbar from "../components/Navbar";
+=======
+>>>>>>> 0fb50dc66dd95da7213a778eed65a5f69d33a447
 
 const ResumeMatcherPage = () => {
   const [resumeFile, setResumeFile] = useState(null);
