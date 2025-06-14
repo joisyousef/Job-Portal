@@ -1,21 +1,26 @@
 import express from "express";
+import upload from "../configs/multer.js";
 import {
-  applyForJob,
+  registerUser,
+  loginUser,
   getUserData,
+  applyForJob,
   getUserJobApplication,
   updateUserResume,
 } from "../controllers/userController.js";
+import { protect, protectRole } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Get User Data
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+
+// all routes below are user-only
+router.use(protect, protectRole("user"));
+
 router.get("/", getUserData);
-
-// Apply for a job
 router.post("/apply", applyForJob);
-
-// Get user's applied jobs
 router.get("/applications", getUserJobApplication);
-
-// Update User Profile (Resume)
 router.post("/update-resume", upload.single("resume"), updateUserResume);
+
+export default router;

@@ -1,176 +1,183 @@
-import Company from "../models/Company.js";
+// server/controllers/companyController.js
 import bcrypt from "bcrypt";
 import { v2 as cloudinary } from "cloudinary";
-import generateToken from "../utils/generateToken.js";
+import Company from "../models/Company.js";
 import Job from "../models/Job.js";
+import generateToken from "../utils/generateToken.js";
 
-// Register a new company
+/**
+ * POST /api/company/register
+ */
 export const registerCompany = async (req, res) => {
   const { name, email, password } = req.body;
   const imageFile = req.file;
-  if (!name | !email | !password | !imageFile) {
-    return res.json({
+
+  if (!name || !email || !password || !imageFile) {
+    return res.status(400).json({
       success: false,
-      message: "Missing Details",
+      message: "Missing required fields",
     });
   }
+
   try {
-    const companyExists = await Company.findOne({ email });
-    if (companyExists) {
-      return res.json({
+    if (await Company.findOne({ email })) {
+      return res.status(409).json({
         success: false,
         message: "Company already registered",
       });
     }
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
 
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path);
+    const hashPassword = await bcrypt.hash(password, 10);
+    const uploadResult = await cloudinary.uploader.upload(imageFile.path);
 
     const company = await Company.create({
       name,
       email,
       password: hashPassword,
-      image: imageUpload.secure_url,
+      image: uploadResult.secure_url,
     });
 
-    res.json({
+    res.status(201).json({
       success: true,
       company: {
-        _id: company._id,
+        id: company._id,
         name: company.name,
         email: company.email,
         image: company.image,
       },
-      token: generateToken(company._id),
+      token: generateToken({
+        id: company._id,
+        email: company.email,
+        role: "recruiter",
+      }),
     });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Company login
+/**
+ * POST /api/company/login
+ */
 export const loginCompany = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const company = await Company.findOne({ email });
-    if (bcrypt.compare(password, company.password)) {
-      res.json({
-        success: true,
-        company: {
-          _id: company._id,
-          name: company.name,
-          email: company.email,
-          image: company.image,
-        },
-        token: generateToken(company._id),
-      });
-    } else {
-      res.json({
+    if (!company || !(await bcrypt.compare(password, company.password))) {
+      return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// Get company data
-export const getCompanyData = async (req, res) => {
-  try {
-    const company = req.company;
 
     res.json({
       success: true,
-      company,
+      company: {
+        id: company._id,
+        name: company.name,
+        email: company.email,
+        image: company.image,
+      },
+      token: generateToken({
+        id: company._id,
+        email: company.email,
+        role: "recruiter",
+      }),
     });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Post a new job
+/**
+ * GET /api/company/company
+ * (protected, recruiter-only)
+ */
+export const getCompanyData = async (req, res) => {
+  // `protect` + `protectRole("recruiter")` have already loaded req.company
+  res.json({ success: true, company: req.company });
+};
+
+/**
+ * POST /api/company/post-job
+ * (protected, recruiter-only)
+ */
 export const postJob = async (req, res) => {
   const { title, description, location, salary, level, category } = req.body;
-
   const companyId = req.company._id;
 
   try {
-    const newJob = new Job({
+    const newJob = await Job.create({
       title,
       description,
       location,
       salary,
-      companyId,
-      date: Date.now(),
       level,
       category,
+      companyId,
+      date: Date.now(),
     });
-    await newJob.save();
-    res.json({
-      success: true,
-      newJob,
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.status(201).json({ success: true, job: newJob });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Get company job application
-export const getCompanyJobApplicants = async (req, res) => {};
-
-// Get company posted jobs
+/**
+ * GET /api/company/list-jobs
+ * (protected, recruiter-only)
+ */
 export const getCompanyPostedJobs = async (req, res) => {
   try {
-    const companyId = req.company._id;
-    const jobs = await Job.find({ companyId });
-    res.json({
-      success: true,
-      jobsData: jobs,
-    });
-    // (ToDo) Add number of applicants for each job
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    const jobs = await Job.find({ companyId: req.company._id });
+    res.json({ success: true, jobs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Change job application status
-export const changeJobApplicationsStatus = async (req, res) => {};
+/**
+ * GET /api/company/applicants
+ * (protected, recruiter-only)
+ */
+export const getCompanyJobApplicants = async (req, res) => {
+  // TODO: implement fetching applicant data per job
+  res.status(501).json({ success: false, message: "Not implemented" });
+};
 
-// Change job visiblity
+/**
+ * POST /api/company/change-status
+ * (protected, recruiter-only)
+ */
+export const changeJobApplicationsStatus = async (req, res) => {
+  // TODO: implement status change logic
+  res.status(501).json({ success: false, message: "Not implemented" });
+};
+
+/**
+ * POST /api/company/change-visiblity
+ * (protected, recruiter-only)
+ */
 export const changeVisiblity = async (req, res) => {
+  const { id: jobId } = req.body;
+
   try {
-    const { id } = req.body;
-    const companyId = req.company._id;
-    const job = await Job.findById(id);
-    if (companyId.toString() === job.companyId.toString()) {
-      job.visible = !job.visible;
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
     }
+
+    // Only the owning recruiter may toggle visibility
+    if (job.companyId.toString() !== req.company._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    job.visible = !job.visible;
     await job.save();
-    res.json({
-      success: true,
-      job,
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+
+    res.json({ success: true, job });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
