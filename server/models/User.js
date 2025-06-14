@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+<<<<<<< HEAD
 const userSchema = new mongoose.Schema({
   _id: { type: String, required: true }, // Keep your custom _id
   name: { type: String, required: true },
@@ -20,5 +21,36 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return this.password === enteredPassword;
 };
 
+=======
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    resume: {
+      type: String,
+      default: "",
+    },
+    image: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+>>>>>>> authentication
 const User = mongoose.model("User", userSchema);
 export default User;

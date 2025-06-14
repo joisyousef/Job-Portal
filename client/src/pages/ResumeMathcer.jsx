@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 const API_BASE_URL = "http://localhost:5001";
+
 import Navbar from "../components/Navbar";
 
 const ResumeMatcherPage = () => {

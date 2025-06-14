@@ -14,7 +14,11 @@ import { clerkMiddleware } from "@clerk/express";
 import resumeMatcherRoutes from "./routes/resumeMatcherRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import searchRoutes from "./routes/searchRoutes.js";
+<<<<<<< HEAD
 Testing;
+=======
+import userRoutes from "./routes/userRoutes.js";
+>>>>>>> authentication
 
 // Initialize express app
 const app = express();
@@ -43,7 +47,12 @@ app.get("/", (req, res) => res.send("API Working"));
 app.get("/debug-sentry", function mainHandler(req, res) {
   throw new Error("My first Sentry error!");
 });
+<<<<<<< HEAD
 
+=======
+app.post("/webhooks", clerkWebhook);
+app.use("/api/users", userRoutes);
+>>>>>>> authentication
 app.use("/api/company", companyRoutes);
 
 app.use("/api/jobs", jobRoutes);
@@ -65,8 +74,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use("*", (req, res) => {
+// 404 handler: no path means “all”
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "Route not found",

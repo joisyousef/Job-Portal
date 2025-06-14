@@ -1,27 +1,34 @@
 import express from "express";
+import upload from "../configs/multer.js";
 import {
-  applyForJob,
+  registerUser,
+  loginUser,
   getUserData,
+  applyForJob,
   getUserJobApplication,
   updateUserResume,
 } from "../controllers/userController.js";
+<<<<<<< HEAD
 import upload from "../configs/multer.js";
 import { registerUser, loginUser } from "../controllers/authController.js";
+=======
+import { protect, protectRole } from "../middlewares/authMiddleware.js";
+>>>>>>> authentication
 
 const router = express.Router();
 
-// Get User Data
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+
+// all routes below are user-only
+router.use(protect, protectRole("user"));
+
 router.get("/", getUserData);
-
-// Apply for a job
 router.post("/apply", applyForJob);
-
-// Get user's applied jobs
 router.get("/applications", getUserJobApplication);
-
-// Update User Profile (Resume)
 router.post("/update-resume", upload.single("resume"), updateUserResume);
 
+<<<<<<< HEAD
 // Register a user - THIS IS THE MISSING ROUTE
 router.post("/register", registerUser);
 
@@ -33,4 +40,6 @@ router.get("/test", (req, res) => {
   res.json({ message: "User routes working!" });
 });
 
+=======
+>>>>>>> authentication
 export default router;
